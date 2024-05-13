@@ -2,6 +2,7 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const amqplib = require('amqplib/callback_api');
 const dotenv = require('dotenv');
+const fs = require('fs');
 
 dotenv.config();
 
@@ -24,7 +25,7 @@ const client = new Client({
 });
 
 client.on('ready', () => {
-    console.log('Client is ready!');
+    logToFile('Client is ready!');
     createRabbitMQConnection();
 });
 
@@ -33,7 +34,7 @@ client.on('qr', qr => {
 });
 
 client.on('authenticated', (session) => {
-    console.log('Klien berhasil login');
+    logToFile('Klien berhasil login');
 });
 
 client.initialize();
@@ -63,17 +64,37 @@ function createRabbitMQConnection() {
                         const targetNumber = data.recipient;
                         
                         sendMessageWhatsApp(targetNumber, message);
-                        console.log(`Pesan dikirim ke : ${content}`);
+                        let logBro = `Pesan dikirim ke : ${content}`
+                        logToFile(logBro);
                     } catch (error) {
                         console.error('Error parsing JSON message:', error);
+                        logToFile('Error parsing JSON message:', error);
                     }
                     ch2.ack(msg);
                 } else {
-                    console.log('Consumer cancelled by server');
+                    logToFile('Consumer cancelled by server');
                 }
             });
         });
     });
+}
+
+// Fungsi untuk mencatat log ke file
+function logToFile(log) {
+    console.log(log)
+    const logFilePath = 'log.txt';
+    const logMessage = `${getCurrentTimestamp()} : ${log}\n`; // Tambahkan timestamp
+    fs.appendFile(logFilePath, logMessage, (err) => {
+        if (err) {
+            console.error('Gagal mencatat log ke file:', err);
+        }
+    });
+}
+
+function getCurrentTimestamp() {
+    const date = new Date();
+    const timestamp = date.toISOString();
+    return timestamp;
 }
 
 
