@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+  call-it-service-wa:
+    container_name: call-it-service-wa
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8099:80
